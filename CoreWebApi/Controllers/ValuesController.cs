@@ -1,4 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CoreWebApi.Database;
+using CoreWebApi.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -8,11 +12,11 @@ namespace CoreWebApi.Controllers
     [ApiController]
     public class ValuesController : ControllerBase
     {
-        // GET: api/<ValuesController>
-        [HttpGet]
-        public IEnumerable<string> Get()
+        private readonly ProjectDatabaseContext _context;
+
+        public ValuesController()
         {
-            return new string[] { "value1", "value2" };
+            this._context = new ProjectDatabaseContext();
         }
 
         // GET api/<ValuesController>/5
@@ -22,10 +26,21 @@ namespace CoreWebApi.Controllers
             return "value";
         }
 
-        // POST api/<ValuesController>
-        [HttpPost]
-        public void Post([FromBody] string value)
-        {
+
+        [HttpPost("login")]
+        public IActionResult GetUsers([FromBody] LoginInModel loginInModel)
+        {         
+            var users = _context.UserData
+               .Where(u => u.Email == loginInModel.Email && u.Password == loginInModel.Password)
+               .ToList();
+
+            if (users.Count > 0)
+            {                
+                return Ok(users.First());
+            }
+
+            // Authentication failed or no matching user with "ok" status.
+            return Unauthorized("Invalid username or password");
         }
 
         // PUT api/<ValuesController>/5
