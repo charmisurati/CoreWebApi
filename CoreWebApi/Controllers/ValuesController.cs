@@ -3,6 +3,7 @@ using CoreWebApi.Helper;
 using CoreWebApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Org.BouncyCastle.Crypto.Generators;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace CoreWebApi.Controllers
@@ -28,11 +29,11 @@ namespace CoreWebApi.Controllers
 
         [HttpPost("login")]
         public IActionResult GetUsers([FromBody] LoginInModel loginInModel)
-        {         
+        {
             var users = _context.UserData
                .Where(u => u.Email == loginInModel.Email && u.Password == loginInModel.Password)
                .ToList();
-          
+
             if (users.Count > 0)
             {
                 string token = TokenManager.GenerateToken(loginInModel.Email, loginInModel.Password);
@@ -44,14 +45,36 @@ namespace CoreWebApi.Controllers
         }
 
         [HttpPost("signup")]
-        public int CreateUsers([FromBody] UserDatum user )
+        public IActionResult CreateUsers([FromBody] SignUpModel signUp)
         {
-            
-            _context.UserData.Add(user);
-            _context.SaveChanges();
-            return user.UId;
-            
-            
+
+            if (_context.UserData.Any(u => u.Email == signUp.Email))
+            {
+
+                return BadRequest("User with this email already exists.");
+            }
+
+            else
+            {
+
+                string passwordHash = BCrypt.Net.BCrypt.HashPassword(signUp.Password);
+
+                UserDatum newUser = new UserDatum
+                {
+                    FirstName = signUp.FirstName,
+                    LastName = signUp.LastName,
+                    Email = signUp.Email,
+                    Password = passwordHash
+                };
+
+                // Add the new user to the database
+                _context.UserData.Add(newUser);
+                _context.SaveChanges();
+
+                // Return a response indicating success with the sign-up model
+                return StatusCode(200,signUp);
+            }
+
         }
 
 
