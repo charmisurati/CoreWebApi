@@ -1,4 +1,5 @@
 ﻿using CoreWebApi.Database;
+using CoreWebApi.Helper;
 using CoreWebApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -33,8 +34,10 @@ namespace CoreWebApi.Controllers
                .ToList();
           
             if (users.Count > 0)
-            {                
-                return Ok(users.First());
+            {
+                string token = TokenManager.GenerateToken(loginInModel.Email, loginInModel.Password);
+                //return Ok(users.First());
+                return Ok(token);
             }
             // Authentication failed or no matching user with "ok" status.
             return Unauthorized("Invalid username or password");
