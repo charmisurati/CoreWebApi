@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
 namespace CoreWebApi.Controllers
 {
     [Route("api/[controller]")]
@@ -33,15 +31,26 @@ namespace CoreWebApi.Controllers
             var users = _context.UserData
                .Where(u => u.Email == loginInModel.Email && u.Password == loginInModel.Password)
                .ToList();
-
+          
             if (users.Count > 0)
             {                
                 return Ok(users.First());
             }
-
             // Authentication failed or no matching user with "ok" status.
             return Unauthorized("Invalid username or password");
         }
+
+        [HttpPost("signup")]
+        public int CreateUsers([FromBody] UserDatum user )
+        {
+            
+            _context.UserData.Add(user);
+            _context.SaveChanges();
+            return user.UId;
+            
+            
+        }
+
 
         // PUT api/<ValuesController>/5
         [HttpPut("{id}")]
